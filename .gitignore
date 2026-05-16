@@ -1,0 +1,39 @@
+# ── Python ──────────────────────────────────────────────────────
+venv/
+env/
+.env
+__pycache__/
+*.pyc
+*.pyo
+
+# ── Node ────────────────────────────────────────────────────────
+node_modules/
+package-lock.json
+
+# ── Build Outputs ───────────────────────────────────────────────
+build/
+dist/
+
+# ── AI Model Weights (Large binary files — do not commit) ───────
+*.pth
+*.pt
+*.h5
+*.onnx
+*.weights
+
+# ── AI Databases & Media ────────────────────────────────────────
+chroma_db/
+*.webm
+*.wav
+*.mp4
+
+# ── Dataset Folders ─────────────────────────────────────────────
+daisee/
+daisee_processed/
+affectnet/
+
+# ── OS & Editor Junk ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

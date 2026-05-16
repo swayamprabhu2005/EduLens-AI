@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+opencv-python-headless
+deepface
+mediapipe
+numpy
+motor
+pydantic
+pydantic-settings
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
+aiofiles
+tf-keras
+tensorflow
