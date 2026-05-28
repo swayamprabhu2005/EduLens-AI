@@ -89,6 +89,7 @@ Create a `.env` file in the **project root**:
 
 ```env
 MONGODB_URL=mongodb://localhost:27017/
+DATABASE_NAME=engagement_tracker
 JWT_SECRET=your_super_secret_key_here
 NVIDIA_API_KEY=your_nvidia_nim_api_key_here
 ```
@@ -172,6 +173,7 @@ EduLens-AI/
 | Variable | Description | Example |
 |---|---|---|
 | `MONGODB_URL` | MongoDB connection string | `mongodb://localhost:27017/` |
+| `DATABASE_NAME` | MongoDB database name | `engagement_tracker` |
 | `JWT_SECRET` | Secret key for signing JWT tokens (keep this private) | `a_long_random_string` |
 | `NVIDIA_API_KEY` | API key for NVIDIA NIM (Gemma-2 LLM) | `nvapi-xxxxxxxxxxxx` |
 
