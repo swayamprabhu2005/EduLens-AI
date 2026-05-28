@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { reports, sessions as sessionsApi } from '../services/api';
+import { Video, VideoOff, Mic, MicOff, Sparkles, LogOut, Radio, Loader } from 'lucide-react';
 
 const VirtualClassroom = () => {
   const { sessionId } = useParams();
@@ -8,6 +9,10 @@ const VirtualClassroom = () => {
   const role = localStorage.getItem('role') || 'student';
   const [status, setStatus] = useState('Connecting...');
   const [isRecording, setIsRecording] = useState(false);
+  
+  // Custom interface states
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
 
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -53,10 +58,11 @@ const VirtualClassroom = () => {
 
     ws.onerror = () => setStatus('Connection error. Is the backend running?');
 
+    const activePeers = peersRef.current;
     return () => {
       ws.close();
       if (localStreamRef.current) localStreamRef.current.getTracks().forEach(t => t.stop());
-      Object.values(peersRef.current).forEach(p => p.close());
+      Object.values(activePeers).forEach(p => p.close());
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
@@ -155,96 +161,171 @@ const VirtualClassroom = () => {
     wsRef.current?.send(JSON.stringify({ type: 'answer', sdp: answer }));
   };
 
+  const toggleMic = () => {
+    if (localStreamRef.current) {
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
+      }
+    }
+  };
+
+  const toggleVideo = () => {
+    if (localStreamRef.current) {
+      const videoTrack = localStreamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsVideoOff(!videoTrack.enabled);
+      }
+    }
+  };
+
   const isReady = status.includes('Ready');
-  const isLive  = status.includes('Live');
+  const isLive  = status.includes('Live') || status.includes('Watching');
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#2dd4bf', margin: 0 }}>
-          {role === 'teacher' ? '🎓 Teacher — Live Classroom' : '📺 Student — Live Class'}
-        </h1>
-        <p style={{ color: '#94a3b8', marginTop: '0.5rem' }}>{status}</p>
+    <div className="min-h-screen bg-ink-900 text-white p-6 sm:p-10 flex flex-col items-center justify-between font-sans selection:bg-coral-200 selection:text-coral-900">
+      
+      {/* Header HUD */}
+      <div className="w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/5 pb-5 mb-6">
+        <div className="flex items-center space-x-3.5">
+          <div className="relative w-9 h-9 flex items-center justify-center bg-white/5 backdrop-blur-md rounded-xl border border-white/10 shadow-premium">
+            <Radio className="w-5 h-5 text-coral animate-breath" />
+          </div>
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl font-display font-extrabold text-white flex items-center justify-center sm:justify-start">
+              {role === 'teacher' ? '🎓 Lecture Broadcast' : '📺 Student Theater'}
+            </h1>
+            <p className="text-xs text-ink-300 mt-0.5">{status}</p>
+          </div>
+        </div>
+
+        <button 
+          onClick={role === 'teacher' ? endClass : () => navigate('/student')}
+          className="flex items-center space-x-1.5 px-4.5 py-2.5 rounded-xl text-xs font-bold bg-white/5 hover:bg-coral hover:text-white border border-white/10 hover:border-coral transition-all active:scale-95"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>{role === 'teacher' ? 'End Session' : 'Leave Class'}</span>
+        </button>
       </div>
 
-      {/* Video Area */}
-      <div style={{
-        width: '100%', maxWidth: '900px',
-        aspectRatio: '16/9',
-        background: '#000',
-        borderRadius: '1rem',
-        overflow: 'hidden',
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: '0 25px 60px rgba(0,0,0,0.7)'
-      }}>
+      {/* Main Theater Display */}
+      <div className="w-full max-w-4xl bg-black border border-white/5 rounded-3xl overflow-hidden relative shadow-premium-xl aspect-video flex items-center justify-center">
         {role === 'teacher' ? (
           <>
-            <video ref={localVideoRef} autoPlay playsInline muted
-              style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
+            <video 
+              ref={localVideoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              className={`w-full h-full object-cover transform scale-X(-1) transition-all duration-500 ${isVideoOff ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`} 
+            />
 
-            {/* Start overlay */}
+            {/* Stream block splash */}
+            {isVideoOff && (
+              <div className="absolute inset-0 bg-ink-950 flex flex-col items-center justify-center">
+                <VideoOff className="w-12 h-12 text-ink-400 mb-3" />
+                <p className="text-xs font-semibold text-ink-300">Camera Feed Disabled</p>
+              </div>
+            )}
+
+            {/* Broadcast Overlay Splash */}
             {(isReady || status === 'Connecting...') && (
-              <div style={{
-                position: 'absolute', inset: 0,
-                background: 'rgba(0,0,0,0.75)',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', gap: '1rem', zIndex: 10
-              }}>
-                <div style={{ fontSize: '3rem' }}>🎥</div>
-                <p style={{ color: '#cbd5e1', maxWidth: '320px', textAlign: 'center' }}>
-                  Click below to turn on your camera and start broadcasting to students.
+              <div className="absolute inset-0 bg-ink-950/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20">
+                <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mb-4 shadow-premium animate-breath">
+                  <Video className="w-7 h-7 text-coral" />
+                </div>
+                <h3 className="text-lg font-display font-black text-white">Initialize Streaming</h3>
+                <p className="text-xs text-ink-300 mt-1 max-w-[280px] leading-relaxed">
+                  Turn on your microphone and camera to start your secure WebRTC broadcast to your classroom.
                 </p>
-                <button onClick={startTeacherStream} style={{
-                  background: 'linear-gradient(135deg, #0d9488, #059669)',
-                  color: 'white', border: 'none', padding: '1rem 2.5rem',
-                  borderRadius: '9999px', fontSize: '1.1rem', fontWeight: 700,
-                  cursor: 'pointer', boxShadow: '0 8px 30px rgba(13,148,136,0.4)',
-                  transition: 'transform 0.2s'
-                }}
-                  onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                  onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                
+                <button 
+                  onClick={startTeacherStream} 
+                  className="mt-6 bg-coral hover:bg-coral-600 text-white px-7 py-3.5 rounded-2xl text-xs font-bold shadow-coral-soft hover:shadow-premium-lg transition-all active:scale-95 flex items-center space-x-2"
                 >
-                  🚀 Start Broadcast
+                  <Sparkles className="w-4 h-4 text-white fill-white" />
+                  <span>Start Live Broadcast</span>
                 </button>
               </div>
             )}
 
-            {/* Live badges */}
+            {/* Live Indicator capsules */}
             {isLive && (
               <>
-                <div style={{
-                  position: 'absolute', top: '1rem', left: '1rem',
-                  background: '#dc2626', padding: '0.25rem 0.75rem',
-                  borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700,
-                  display: 'flex', alignItems: 'center', gap: '0.4rem', zIndex: 20,
-                  animation: 'pulse 1.5s infinite'
-                }}>
-                  <div style={{ width: 8, height: 8, background: 'white', borderRadius: '50%' }}></div>
-                  REC • AI Summarization ON
+                <div className="absolute top-4 left-4 bg-coral px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-premium animate-pulse z-15">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+                  <span>AI Summarization ON</span>
                 </div>
-                <button onClick={endClass} style={{
-                  position: 'absolute', bottom: '1.5rem',
-                  background: '#dc2626', color: 'white', border: 'none',
-                  padding: '0.75rem 2rem', borderRadius: '9999px',
-                  fontWeight: 700, cursor: 'pointer', zIndex: 20,
-                  boxShadow: '0 4px 20px rgba(220,38,38,0.5)'
-                }}>
-                  ⏹ End Class & Generate AI Summary
-                </button>
+                
+                {/* Control bar floating */}
+                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 bg-ink-900/80 backdrop-blur-md border border-white/10 px-5 py-2.5 rounded-2xl flex items-center space-x-4 shadow-premium-lg z-15">
+                  <button 
+                    onClick={toggleMic} 
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                      isMuted ? 'bg-coral text-white' : 'bg-white/5 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
+                  
+                  <button 
+                    onClick={toggleVideo} 
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                      isVideoOff ? 'bg-coral text-white' : 'bg-white/5 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {isVideoOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                  </button>
+                  
+                  <div className="w-[1px] h-6 bg-white/10"></div>
+                  
+                  <button 
+                    onClick={endClass} 
+                    className="bg-coral hover:bg-coral-600 px-4 py-2 rounded-xl text-xs font-bold shadow-coral-soft transition-colors text-white"
+                  >
+                    End Class
+                  </button>
+                </div>
               </>
             )}
           </>
         ) : (
-          <video ref={remoteVideoRef} autoPlay playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <>
+            <video 
+              ref={remoteVideoRef} 
+              autoPlay 
+              playsInline 
+              className="w-full h-full object-cover" 
+            />
+            
+            {/* Student splash state if not loaded */}
+            {!isLive && (
+              <div className="absolute inset-0 bg-ink-950 flex flex-col items-center justify-center p-6 text-center z-10">
+                <Loader className="w-8 h-8 text-coral animate-spin mb-4" />
+                <h3 className="text-sm font-display font-semibold text-white">Connecting to Lecture...</h3>
+                <p className="text-[11px] text-ink-300 mt-1 max-w-[200px] leading-relaxed">
+                  Waiting for your teacher to initiate the live camera broadcast.
+                </p>
+              </div>
+            )}
+            
+            {isLive && (
+              <div className="absolute top-4 left-4 bg-sage px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-premium animate-breath z-10">
+                <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>
+                <span>Active Broadcast</span>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }`}</style>
+      {/* Footer Info Capsule */}
+      <div className="w-full max-w-5xl text-center text-[10px] text-ink-300 font-medium border-t border-white/5 pt-5 mt-6 leading-relaxed">
+        EduLens WebRTC streaming pipeline encrypts feeds locally. Real-time facial indicators are logged completely inside secure backend schemas.
+      </div>
+      
     </div>
   );
 };

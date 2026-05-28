@@ -6,7 +6,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 # Load environment variables (like NVIDIA_API_KEY)
-load_dotenv()
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
+load_dotenv(dotenv_path=dotenv_path)
 
 class MeetingRAG:
     def __init__(self):
@@ -32,10 +33,16 @@ class MeetingRAG:
         self.collection = self.chroma_client.get_or_create_collection(name="meeting_transcripts")
 
         # 4. NVIDIA LLM Client (Gemma)
-        self.nvidia_client = OpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=os.environ.get("NVIDIA_API_KEY")
-        )
+        api_key = os.environ.get("NVIDIA_API_KEY")
+        if api_key:
+            self.nvidia_client = OpenAI(
+                base_url="https://integrate.api.nvidia.com/v1",
+                api_key=api_key
+            )
+            print("NVIDIA LLM Client Loaded!")
+        else:
+            print("Warning: NVIDIA_API_KEY is not set in environment variables. AI summaries will be disabled, but local transcription and embedding will still function.")
+            self.nvidia_client = None
 
     def process_audio(self, audio_filepath, session_id):
         """
@@ -82,6 +89,9 @@ class MeetingRAG:
         full_context = " ".join(results['documents'])
         
         # 2. Ask the NVIDIA Endpoint (Gemma) to write the summary
+        if not self.nvidia_client:
+            return "NVIDIA Gemma LLM Client is not configured. Please set the NVIDIA_API_KEY in your .env file to generate AI summaries."
+
         print("Sending to NVIDIA Gemma Endpoint...")
         prompt = f"""
         You are a professional teacher's assistant. Based on the following meeting transcript, 

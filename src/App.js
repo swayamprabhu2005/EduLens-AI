@@ -17,17 +17,24 @@ const PrivateRoute = ({ children, role }) => {
   return (
     <>
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </div>
     </>
   );
 };
 
+// Auth check only — no shell chrome (used for full-screen classroom)
+const PrivateRouteFullScreen = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) return <Navigate to="/login" />;
+  return children;
+};
+
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-teal-50">
+      <div className="min-h-screen bg-cream-50 font-sans antialiased">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -50,12 +57,13 @@ function App() {
             } 
           />
           
+          {/* VirtualClassroom is full-screen immersive — no Navbar/container wrapper */}
           <Route 
             path="/room/:sessionId" 
             element={
-              <PrivateRoute>
+              <PrivateRouteFullScreen>
                 <VirtualClassroom />
-              </PrivateRoute>
+              </PrivateRouteFullScreen>
             } 
           />
           

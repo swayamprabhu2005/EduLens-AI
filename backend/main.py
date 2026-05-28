@@ -2,8 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routes import auth, session, analytics, reports, webrtc
 from backend.services.database import close_mongo_connection
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Smart E-Learning Engagement Tracker")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await close_mongo_connection()
+
+app = FastAPI(title="Smart E-Learning Engagement Tracker", lifespan=lifespan)
 
 # Configure CORS
 app.add_middleware(
@@ -24,10 +30,6 @@ app.include_router(webrtc.router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to Smart E-Learning Engagement Tracker API"}
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    await close_mongo_connection()
 
 if __name__ == "__main__":
     import uvicorn

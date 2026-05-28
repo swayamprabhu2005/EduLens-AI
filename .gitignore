@@ -1,39 +1,61 @@
-# ── Python ──────────────────────────────────────────────────────
+# ── Python ──────────────────────────────────────────────────────────────────
 venv/
 env/
 .env
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
+*.egg-info/
+dist/
+*.egg
 
-# ── Node ────────────────────────────────────────────────────────
+# ── Node / React ─────────────────────────────────────────────────────────────
 node_modules/
 package-lock.json
 
-# ── Build Outputs ───────────────────────────────────────────────
+# ── Build Outputs ─────────────────────────────────────────────────────────────
 build/
-dist/
 
-# ── AI Model Weights (Large binary files — do not commit) ───────
+# ── AI Model Weights (large binary files — do not commit to git) ──────────────
 *.pth
 *.pt
 *.h5
 *.onnx
 *.weights
+*.pkl
+*.bin
 
-# ── AI Databases & Media ────────────────────────────────────────
+# ── AI Databases & Media ──────────────────────────────────────────────────────
 chroma_db/
 *.webm
 *.wav
 *.mp4
+*.mp3
 
-# ── Dataset Folders ─────────────────────────────────────────────
+# ── Uploaded Class Recordings (auto-generated at runtime) ────────────────────
+backend/uploads/
+uploads/
+
+# ── Dataset Folders ───────────────────────────────────────────────────────────
 daisee/
 daisee_processed/
 affectnet/
+datasets/
 
-# ── OS & Editor Junk ────────────────────────────────────────────
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS & Editor Junk ──────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# ── Test & Coverage ───────────────────────────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
