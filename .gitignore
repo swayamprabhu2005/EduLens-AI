@@ -12,6 +12,8 @@ dist/
 
 # ── Node / React ─────────────────────────────────────────────────────────────
 node_modules/
+.npm/
+.eslintcache
 
 # ── Build Outputs ─────────────────────────────────────────────────────────────
 build/
@@ -25,16 +27,23 @@ build/
 *.pkl
 *.bin
 
-# ── AI Databases & Media ──────────────────────────────────────────────────────
+# ── AI Databases, Archives & Media ────────────────────────────────────────────
 chroma_db/
 *.webm
 *.wav
 *.mp4
 *.mp3
+*.ogg
+*.m4a
+*.zip
+*.tar.gz
 
-# ── Uploaded Class Recordings (auto-generated at runtime) ────────────────────
+# ── Uploaded Class Recordings & Temporary Files (auto-generated at runtime) ───
 backend/uploads/
 uploads/
+temp/
+tmp/
+*.tmp
 
 # ── Dataset Folders ───────────────────────────────────────────────────────────
 daisee/

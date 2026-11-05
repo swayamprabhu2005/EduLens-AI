@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import { Download, Plus, FileAudio, Sparkles, TrendingUp, AlertTriangle, Users, Layers } from 'lucide-react';
+import { Download, Plus, FileAudio, Sparkles, TrendingUp, AlertTriangle, Users, Layers, MessageSquare, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TeacherDashboard = () => {
