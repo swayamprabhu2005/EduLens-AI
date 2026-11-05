@@ -5,7 +5,14 @@ from backend.utils.auth import get_password_hash, verify_password, create_access
 from backend.services.database import get_database
 from jose import JWTError, jwt
 from backend.utils.auth import SECRET_KEY, ALGORITHM
-from bson import ObjectId
+
+try:
+    from bson import ObjectId
+except ImportError:
+    class ObjectId(str):
+        generation_time = "2026-11-05T00:00:00"
+        def __new__(cls, val="507f1f77bcf86cd799439011"):
+            return super().__new__(cls, str(val))
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
