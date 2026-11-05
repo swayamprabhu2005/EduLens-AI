@@ -22,7 +22,6 @@ export const auth = {
 export const sessions = {
   list: () => api.get('/sessions'),
   create: (sessionData) => api.post('/sessions', sessionData),
-  analyze: (sessionId, frame) => api.post(`/sessions/${sessionId}/analyze`, { image: frame }),
   goLive: (sessionId) => api.patch(`/sessions/${sessionId}/go_live`),
   endSession: (sessionId) => api.patch(`/sessions/${sessionId}/end`),
 };
@@ -38,6 +37,7 @@ export const reports = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   getAISummary: (sessionId) => api.get(`/reports/${sessionId}/ai_summary`),
+  askAI: (sessionId, question) => api.post(`/reports/${sessionId}/ask`, { question }),
 };
 
 export default api;
